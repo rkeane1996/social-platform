@@ -3,7 +3,7 @@ import mongoose, { HydratedDocument } from 'mongoose';
 
 @Schema()
 export class Posts {
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Users' })
   user_id;
 
   @Prop({ type: String })
@@ -15,11 +15,11 @@ export class Posts {
   @Prop({ type: Date, default: Date.now })
   created_at;
 
-  @Prop([{ user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } }])
+  @Prop([{ like_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Likes' } }])
   likes;
 
   @Prop([
-    { comment_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Comment' } },
+    { comment_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Comments' } },
   ])
   comments;
 }

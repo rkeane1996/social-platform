@@ -21,13 +21,13 @@ export class Users {
   @Prop({ type: String })
   profile_picture;
 
-  @Prop([{ user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } }])
+  @Prop([{ user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' } }])
   followers;
 
-  @Prop([{ user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } }])
+  @Prop([{ user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' } }])
   following;
 
-  @Prop([{ post_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' } }])
+  @Prop([{ post_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Posts' } }])
   posts;
 
   @Prop({ type: Date, default: Date.now })
