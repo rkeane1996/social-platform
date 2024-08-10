@@ -3,13 +3,13 @@ import mongoose, { HydratedDocument } from 'mongoose';
 
 @Schema()
 export class Likes {
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Users' })
   user_id;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Post' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Posts' })
   post_id;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Comments' })
   comment_id;
 
   @Prop({ type: Date, default: Date.now })
