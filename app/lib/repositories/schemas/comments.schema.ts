@@ -3,22 +3,19 @@ import mongoose, { HydratedDocument } from 'mongoose';
 
 @Schema()
 export class Comments {
-  @Prop({ type: String, unique: true })
-  username;
-
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Post' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Posts' })
   post_id;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Users' })
   user_id;
 
-  @Prop({ tyep: String })
+  @Prop({ type: String })
   text;
 
   @Prop({ type: Date, default: Date.now })
   created_at;
 
-  @Prop([{ user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } }])
+  @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Likes' }])
   likes;
 }
 

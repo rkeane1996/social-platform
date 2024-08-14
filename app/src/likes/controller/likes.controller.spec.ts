@@ -40,6 +40,7 @@ describe('LikesController', () => {
     it('should call likesService.addLike with correct parameters', async () => {
       const dto: AddLikeDto = { user_id: 'user1', post_id: 'post1' };
       const result: ILikes = {
+        id: 'RES',
         user_id: 'user1',
         post_id: 'post1',
         comment_id: null,
@@ -67,6 +68,7 @@ describe('LikesController', () => {
       const postId = 'post1';
       const result: ILikes[] = [
         {
+          id: 'RES',
           user_id: 'user1',
           post_id: 'post1',
           comment_id: null,
@@ -93,6 +95,7 @@ describe('LikesController', () => {
       const commentId = 'comment1';
       const result: ILikes[] = [
         {
+          id: 'RES',
           user_id: 'user1',
           post_id: null,
           comment_id: 'comment1',
@@ -124,6 +127,7 @@ describe('LikesController', () => {
     it('should return a like by its ID', async () => {
       const likeId = 'like1';
       const result: ILikes = {
+        id: 'RES',
         user_id: 'user1',
         post_id: 'post1',
         comment_id: null,

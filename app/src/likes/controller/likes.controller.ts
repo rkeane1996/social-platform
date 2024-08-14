@@ -7,7 +7,7 @@ import { ILikes } from '../dto/response/get-like.interface';
 export class LikesController {
   constructor(private readonly likesService: LikesService) {}
 
-  @Post('add')
+  @Post('add') //this add likes for a post or comment
   async addLikes(@Body() request: AddLikeDto): Promise<ILikes> {
     return await this.likesService.addLike(request);
   }
