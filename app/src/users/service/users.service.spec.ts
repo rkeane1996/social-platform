@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
-import { UsersRepository } from '../repository/user.repository';
 import { GetUserQueryDto } from '../dto/request/get-user-dto';
 import { UpdateUserProfileDto } from '../dto/request/update-user-dto';
 import { NotFoundException } from '@nestjs/common';
 import { GetUsersResponse } from '../dto/response/get-user-response.interface';
 import { UpdateUserResponse } from '../dto/response/update-user-response.interface';
+import { UsersRepository } from '../../../lib/repositories/users/user.repository';
 
 describe('UsersService', () => {
   let service: UsersService;

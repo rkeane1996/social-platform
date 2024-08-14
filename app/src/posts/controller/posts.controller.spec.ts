@@ -36,6 +36,7 @@ describe('PostsController', () => {
       const userId = 'validUserId';
       const result: IPosts[] = [
         {
+          id: 'id test',
           user_id: userId,
           caption: 'Post 1',
           image_url: 'http://example.com/image1.jpg',
@@ -64,6 +65,7 @@ describe('PostsController', () => {
       };
 
       const result: IPosts = {
+        id: 'id test',
         ...createPostDto,
       };
 

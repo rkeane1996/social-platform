@@ -1,8 +1,8 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Likes, LikesDocument } from '../schema/likes.schema';
-import { AddLikeDto } from '../dto/request/add-like.dto';
-import { ILikes } from '../dto/response/get-like.interface';
+import { Likes, LikesDocument } from '../schemas/likes.schema';
+import { AddLikeDto } from '../../../src/likes/dto/request/add-like.dto';
+import { ILikes } from '../../../src/likes/dto/response/get-like.interface';
 
 export class LikesRepository {
   constructor(
@@ -10,8 +10,8 @@ export class LikesRepository {
     private readonly likesModel: Model<LikesDocument>,
   ) {}
 
-  async addLike(entity: AddLikeDto): Promise<ILikes> {
-    return this.likesModel.create(entity);
+  async addLike(entity: AddLikeDto) {
+    return await this.likesModel.create(entity);
   }
 
   async findLikesById(likeId: string): Promise<ILikes> {
@@ -25,4 +25,5 @@ export class LikesRepository {
   async findLikesByCommentId(commentId: string): Promise<ILikes[]> {
     return this.likesModel.find({ comment_id: commentId }).lean();
   }
+
 }
