@@ -6,8 +6,8 @@ import { LikesModule } from './likes/likes.module';
 import { FollowsModule } from './follows/follows.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import 'dotenv/config';
 import { RepositoriesModule } from '../lib/repositories/repositories.module';
+import 'dotenv/config';
 
 @Module({
   imports: [

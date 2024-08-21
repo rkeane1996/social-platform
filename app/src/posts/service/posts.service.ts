@@ -12,14 +12,25 @@ export class PostsService {
   ) {}
 
   async getUsersPosts(userId: string): Promise<IPosts[]> {
-    return await this.postsRepo.findUsersPosts(userId);
+    const usersPosts = (await this.postsRepo.findUsersPosts(userId)) || [];
+    return usersPosts.map((posts) => this.formatPostResponse(posts));
   }
 
-  async createPost(requestBody: CreatePostsDto) {
-    const postCreated = (await this.postsRepo.createPost(
-      requestBody,
-    )) as IPosts;
+  async createPost(requestBody: CreatePostsDto): Promise<IPosts> {
+    const postCreated = await this.postsRepo.createPost(requestBody);
     await this.userRepo.addUserPosts(postCreated.user_id, postCreated.id);
-    return postCreated;
+    return this.formatPostResponse(postCreated);
+  }
+
+  private formatPostResponse(post): IPosts {
+    return {
+      id: post._id,
+      user_id: post.user_id,
+      caption: post.caption,
+      image_url: post.image_url,
+      created_at: post.created_at,
+      likes: post.likes,
+      comments: post.comments,
+    };
   }
 }

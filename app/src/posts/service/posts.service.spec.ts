@@ -3,25 +3,11 @@ import { PostsService } from './posts.service';
 import { PostsRepository } from '../../../lib/repositories/posts/post.repository';
 import { UsersRepository } from '../../../lib/repositories/users/user.repository';
 import { CreatePostsDto } from '../dto/request/create-posts-response.dto';
-import { IPosts } from '../dto/response/get-posts-response.interface';
-
-// Mock data
-const mockPost: IPosts = {
-  user_id: 'user1',
-  caption: 'Test Caption',
-  image_url: 'http://test.com/image.jpg',
-  created_at: new Date(),
-  likes: [],
-  comments: [],
-  id: 'post1',
-};
-
-const mockPosts: IPosts[] = [mockPost];
 
 describe('PostsService', () => {
-  let postsService: PostsService;
-  let postsRepository: PostsRepository;
-  let usersRepository: UsersRepository;
+  let service: PostsService;
+  let postsRepo: PostsRepository;
+  let userRepo: UsersRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -30,58 +16,74 @@ describe('PostsService', () => {
         {
           provide: PostsRepository,
           useValue: {
-            findUsersPosts: jest.fn().mockResolvedValue(mockPosts),
-            createPost: jest.fn().mockResolvedValue(mockPost),
+            findUsersPosts: jest.fn(),
+            createPost: jest.fn(),
           },
         },
         {
           provide: UsersRepository,
           useValue: {
-            addUserPosts: jest.fn().mockResolvedValue(undefined),
+            addUserPosts: jest.fn(),
           },
         },
       ],
     }).compile();
 
-    postsService = module.get<PostsService>(PostsService);
-    postsRepository = module.get<PostsRepository>(PostsRepository);
-    usersRepository = module.get<UsersRepository>(UsersRepository);
-  });
-
-  it('should be defined', () => {
-    expect(postsService).toBeDefined();
+    service = module.get<PostsService>(PostsService);
+    postsRepo = module.get<PostsRepository>(PostsRepository);
+    userRepo = module.get<UsersRepository>(UsersRepository);
   });
 
   describe('getUsersPosts', () => {
-    it('should return a list of posts for a user', async () => {
-      const userId = 'user1';
+    it('should return a list of user posts', async () => {
+      const mockPosts = [
+        {
+          _id: 'post1',
+          user_id: 'user1',
+          caption: 'First post',
+          image_url: 'http://example.com/image1.jpg',
+          created_at: new Date(),
+          likes: [],
+          comments: [],
+        },
+      ];
 
-      const result = await postsService.getUsersPosts(userId);
-
-      expect(result).toEqual(mockPosts);
-      expect(postsRepository.findUsersPosts).toHaveBeenCalledWith(userId);
-    });
-
-    it('should return an empty array if no posts are found for a user', async () => {
-      jest.spyOn(postsRepository, 'findUsersPosts').mockResolvedValueOnce([]);
-
-      const userId = 'user1';
-
-      const result = await postsService.getUsersPosts(userId);
-
-      expect(result).toEqual([]);
-      expect(postsRepository.findUsersPosts).toHaveBeenCalledWith(userId);
-    });
-
-    it('should handle a failure in fetching posts for a user', async () => {
       jest
-        .spyOn(postsRepository, 'findUsersPosts')
-        .mockRejectedValueOnce(new Error('Failed to fetch posts'));
+        .spyOn(postsRepo, 'findUsersPosts')
+        .mockResolvedValue(mockPosts as any);
 
-      const userId = 'user1';
+      const result = await service.getUsersPosts('user1');
 
-      await expect(postsService.getUsersPosts(userId)).rejects.toThrowError(
-        'Failed to fetch posts',
+      expect(postsRepo.findUsersPosts).toHaveBeenCalledWith('user1');
+      expect(result).toEqual([
+        {
+          id: 'post1',
+          user_id: 'user1',
+          caption: 'First post',
+          image_url: 'http://example.com/image1.jpg',
+          created_at: mockPosts[0].created_at,
+          likes: [],
+          comments: [],
+        },
+      ]);
+    });
+
+    it('should return an empty array if user has no posts', async () => {
+      jest.spyOn(postsRepo, 'findUsersPosts').mockResolvedValue([]);
+
+      const result = await service.getUsersPosts('user1');
+
+      expect(postsRepo.findUsersPosts).toHaveBeenCalledWith('user1');
+      expect(result).toEqual([]);
+    });
+
+    it('should handle error when fetching posts fails', async () => {
+      jest
+        .spyOn(postsRepo, 'findUsersPosts')
+        .mockRejectedValue(new Error('Database error'));
+
+      await expect(service.getUsersPosts('user1')).rejects.toThrow(
+        'Database error',
       );
     });
   });
@@ -90,58 +92,87 @@ describe('PostsService', () => {
     it('should create a post and associate it with a user', async () => {
       const createPostDto: CreatePostsDto = {
         user_id: 'user1',
-        caption: 'Test Caption',
-        image_url: 'http://test.com/image.jpg',
+        caption: 'New Post',
+        image_url: 'http://example.com/image.jpg',
         created_at: new Date(),
         likes: [],
         comments: [],
       };
 
-      const result = await postsService.createPost(createPostDto);
+      const mockPost = {
+        _id: 'post1',
+        user_id: 'user1',
+        caption: 'New Post',
+        image_url: 'http://example.com/image.jpg',
+        created_at: createPostDto.created_at,
+        likes: [],
+        comments: [],
+      };
 
-      expect(result).toEqual(mockPost);
-      expect(postsRepository.createPost).toHaveBeenCalledWith(createPostDto);
-      expect(usersRepository.addUserPosts).toHaveBeenCalledWith(
-        mockPost.user_id,
-        mockPost.id,
+      jest.spyOn(postsRepo, 'createPost').mockResolvedValue(mockPost as any);
+      jest.spyOn(userRepo, 'addUserPosts').mockResolvedValue(undefined);
+
+      const result = await service.createPost(createPostDto);
+
+      expect(postsRepo.createPost).toHaveBeenCalledWith(createPostDto);
+      expect(userRepo.addUserPosts).toHaveBeenCalled();
+      expect(result).toEqual({
+        id: 'post1',
+        user_id: 'user1',
+        caption: 'New Post',
+        image_url: 'http://example.com/image.jpg',
+        created_at: createPostDto.created_at,
+        likes: [],
+        comments: [],
+      });
+    });
+
+    it('should handle error if post creation fails', async () => {
+      const createPostDto: CreatePostsDto = {
+        user_id: 'user1',
+        caption: 'New Post',
+        image_url: 'http://example.com/image.jpg',
+        created_at: new Date(),
+        likes: [],
+        comments: [],
+      };
+
+      jest
+        .spyOn(postsRepo, 'createPost')
+        .mockRejectedValue(new Error('Creation failed'));
+
+      await expect(service.createPost(createPostDto)).rejects.toThrow(
+        'Creation failed',
       );
     });
 
-    it('should handle a failure in creating a post', async () => {
-      jest
-        .spyOn(postsRepository, 'createPost')
-        .mockRejectedValueOnce(new Error('Failed to create post'));
-
+    it('should handle error if associating post with user fails', async () => {
       const createPostDto: CreatePostsDto = {
         user_id: 'user1',
-        caption: 'Test Caption',
-        image_url: 'http://test.com/image.jpg',
+        caption: 'New Post',
+        image_url: 'http://example.com/image.jpg',
         created_at: new Date(),
         likes: [],
         comments: [],
       };
 
-      await expect(postsService.createPost(createPostDto)).rejects.toThrowError(
-        'Failed to create post',
-      );
-    });
-
-    it('should handle a failure in associating a post with a user', async () => {
-      jest
-        .spyOn(usersRepository, 'addUserPosts')
-        .mockRejectedValueOnce(new Error('Failed to associate post with user'));
-
-      const createPostDto: CreatePostsDto = {
+      const mockPost = {
+        _id: 'post1',
         user_id: 'user1',
-        caption: 'Test Caption',
-        image_url: 'http://test.com/image.jpg',
-        created_at: new Date(),
+        caption: 'New Post',
+        image_url: 'http://example.com/image.jpg',
+        created_at: createPostDto.created_at,
         likes: [],
         comments: [],
       };
 
-      await expect(postsService.createPost(createPostDto)).rejects.toThrowError(
-        'Failed to associate post with user',
+      jest.spyOn(postsRepo, 'createPost').mockResolvedValue(mockPost as any);
+      jest
+        .spyOn(userRepo, 'addUserPosts')
+        .mockRejectedValue(new Error('Association failed'));
+
+      await expect(service.createPost(createPostDto)).rejects.toThrow(
+        'Association failed',
       );
     });
   });

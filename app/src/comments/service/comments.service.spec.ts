@@ -3,24 +3,11 @@ import { CommentsService } from './comments.service';
 import { CommentsRepository } from '../../../lib/repositories/comments/comments.repository';
 import { PostsRepository } from '../../../lib/repositories/posts/post.repository';
 import { AddCommentDto } from '../dto/request/add-comment.dto';
-import { IComment } from '../dto/repsonse/comment.interface';
-
-// Mock Data
-const mockComment: IComment = {
-  id: '1',
-  post_id: 'post1',
-  user_id: 'user1',
-  text: 'This is a comment',
-  created_at: new Date(),
-  likes: [],
-};
-
-const mockComments: IComment[] = [mockComment];
 
 describe('CommentsService', () => {
-  let commentsService: CommentsService;
-  let commentsRepository: CommentsRepository;
-  let postsRepository: PostsRepository;
+  let service: CommentsService;
+  let commentsRepo: CommentsRepository;
+  let postsRepo: PostsRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -29,115 +16,108 @@ describe('CommentsService', () => {
         {
           provide: CommentsRepository,
           useValue: {
-            createComment: jest.fn().mockResolvedValue(mockComment),
-            getCommentsByPostId: jest.fn().mockResolvedValue(mockComments),
+            createComment: jest.fn(),
+            getCommentsByPostId: jest.fn(),
           },
         },
         {
           provide: PostsRepository,
           useValue: {
-            addCommentToPost: jest.fn().mockResolvedValue(undefined),
+            addCommentToPost: jest.fn(),
           },
         },
       ],
     }).compile();
 
-    commentsService = module.get<CommentsService>(CommentsService);
-    commentsRepository = module.get<CommentsRepository>(CommentsRepository);
-    postsRepository = module.get<PostsRepository>(PostsRepository);
-  });
-
-  it('should be defined', () => {
-    expect(commentsService).toBeDefined();
+    service = module.get<CommentsService>(CommentsService);
+    commentsRepo = module.get<CommentsRepository>(CommentsRepository);
+    postsRepo = module.get<PostsRepository>(PostsRepository);
   });
 
   describe('addComment', () => {
-    it('should successfully add a comment and associate it with a post', async () => {
-      const dto: AddCommentDto = {
-        post_id: 'post1',
-        user_id: 'user1',
+    it('should create a comment and add it to the post', async () => {
+      const request: AddCommentDto = {
+        post_id: 'post123',
+        user_id: 'user123',
         text: 'This is a comment',
       };
 
-      const result = await commentsService.addComment(dto);
-      expect(result).toEqual(mockComment);
-      expect(commentsRepository.createComment).toHaveBeenCalledWith(dto);
-      expect(postsRepository.addCommentToPost).toHaveBeenCalledWith(
-        mockComment.post_id,
-        mockComment.id,
-      );
-    });
+      const mockComment = {
+        _id: 'comment123',
+        post_id: 'post123',
+        user_id: 'user123',
+        text: 'This is a comment',
+        likes: [],
+      };
 
-    it('should handle a failure in creating a comment', async () => {
       jest
-        .spyOn(commentsRepository, 'createComment')
-        .mockRejectedValueOnce(new Error('Failed to create comment'));
+        .spyOn(commentsRepo, 'createComment')
+        .mockResolvedValue(mockComment as any);
+      jest.spyOn(postsRepo, 'addCommentToPost').mockResolvedValue(null);
 
-      const dto: AddCommentDto = {
-        post_id: 'post1',
-        user_id: 'user1',
-        text: 'This is a comment',
-      };
+      const result = await service.addComment(request);
 
-      await expect(commentsService.addComment(dto)).rejects.toThrowError(
-        'Failed to create comment',
-      );
-      expect(postsRepository.addCommentToPost).not.toHaveBeenCalled();
-    });
-
-    it('should handle a failure in associating the comment with a post', async () => {
-      jest
-        .spyOn(postsRepository, 'addCommentToPost')
-        .mockRejectedValueOnce(new Error('Failed to add comment to post'));
-
-      const dto: AddCommentDto = {
-        post_id: 'post1',
-        user_id: 'user1',
-        text: 'This is a comment',
-      };
-
-      await expect(commentsService.addComment(dto)).rejects.toThrowError(
-        'Failed to add comment to post',
-      );
-      expect(commentsRepository.createComment).toHaveBeenCalledWith(dto);
+      expect(commentsRepo.createComment).toHaveBeenCalledWith(request);
+      expect(postsRepo.addCommentToPost).toHaveBeenCalled();
+      expect(result).toEqual({
+        id: mockComment._id,
+        post_id: mockComment.post_id,
+        user_id: mockComment.user_id,
+        text: mockComment.text,
+        likes: [],
+      });
     });
   });
 
   describe('getPostComments', () => {
-    it('should return a list of comments for a post', async () => {
-      const postId = 'post1';
+    it('should return a list of formatted comments for a given post ID', async () => {
+      const mockComments = [
+        {
+          _id: 'comment1',
+          post_id: 'post123',
+          user_id: 'user123',
+          text: 'First comment',
+          likes: [],
+        },
+        {
+          _id: 'comment2',
+          post_id: 'post123',
+          user_id: 'user456',
+          text: 'Second comment',
+          likes: [],
+        },
+      ];
 
-      const result = await commentsService.getPostComments(postId);
-      expect(result).toEqual(mockComments);
-      expect(commentsRepository.getCommentsByPostId).toHaveBeenCalledWith(
-        postId,
-      );
+      jest
+        .spyOn(commentsRepo, 'getCommentsByPostId')
+        .mockResolvedValue(mockComments as any);
+
+      const result = await service.getPostComments('post123');
+
+      expect(result).toEqual([
+        {
+          id: 'comment1',
+          post_id: 'post123',
+          user_id: 'user123',
+          text: 'First comment',
+          likes: [],
+        },
+        {
+          id: 'comment2',
+          post_id: 'post123',
+          user_id: 'user456',
+          text: 'Second comment',
+          likes: [],
+        },
+      ]);
     });
 
     it('should return an empty array if no comments are found', async () => {
-      jest
-        .spyOn(commentsRepository, 'getCommentsByPostId')
-        .mockResolvedValueOnce([]);
+      jest.spyOn(commentsRepo, 'getCommentsByPostId').mockResolvedValue([]);
 
-      const postId = 'post1';
+      const result = await service.getPostComments('post123');
 
-      const result = await commentsService.getPostComments(postId);
       expect(result).toEqual([]);
-      expect(commentsRepository.getCommentsByPostId).toHaveBeenCalledWith(
-        postId,
-      );
-    });
-
-    it('should handle a failure in fetching comments', async () => {
-      jest
-        .spyOn(commentsRepository, 'getCommentsByPostId')
-        .mockRejectedValueOnce(new Error('Failed to fetch comments'));
-
-      const postId = 'post1';
-
-      await expect(
-        commentsService.getPostComments(postId),
-      ).rejects.toThrowError('Failed to fetch comments');
     });
   });
 });

@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LikesController } from './likes.controller';
 import { LikesService } from '../service/likes.service';
 import { AddLikeDto } from '../dto/request/add-like.dto';
-import { ILikes } from '../dto/response/get-like.interface';
+import { ILikes } from '../dto/response/like.interface';
 
 describe('LikesController', () => {
   let likesController: LikesController;
@@ -44,7 +44,6 @@ describe('LikesController', () => {
         user_id: 'user1',
         post_id: 'post1',
         comment_id: null,
-        created_at: new Date(),
       };
       mockLikesService.addLike.mockResolvedValue(result);
 
@@ -72,7 +71,6 @@ describe('LikesController', () => {
           user_id: 'user1',
           post_id: 'post1',
           comment_id: null,
-          created_at: new Date(),
         },
       ];
       mockLikesService.getLikesByPostId.mockResolvedValue(result);
@@ -99,7 +97,6 @@ describe('LikesController', () => {
           user_id: 'user1',
           post_id: null,
           comment_id: 'comment1',
-          created_at: new Date(),
         },
       ];
       mockLikesService.getLikesByCommentId.mockResolvedValue(result);
@@ -131,7 +128,6 @@ describe('LikesController', () => {
         user_id: 'user1',
         post_id: 'post1',
         comment_id: null,
-        created_at: new Date(),
       };
       mockLikesService.getLikeById.mockResolvedValue(result);
 
