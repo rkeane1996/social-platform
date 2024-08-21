@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { LikesService } from '../service/likes.service';
 import { AddLikeDto } from '../dto/request/add-like.dto';
-import { ILikes } from '../dto/response/get-like.interface';
+import { ILikes } from '../dto/response/like.interface';
+import { ILikesResponse } from '../dto/response/get-likes-response.interface';
 
 @Controller('likes')
 export class LikesController {
@@ -13,14 +14,16 @@ export class LikesController {
   }
 
   @Get('post')
-  async getLikesByPostId(@Query('postId') postId: string): Promise<ILikes[]> {
+  async getLikesByPostId(
+    @Query('postId') postId: string,
+  ): Promise<ILikesResponse[]> {
     return await this.likesService.getLikesByPostId(postId);
   }
 
   @Get('comment')
   async getLikesByCommentId(
     @Query('commentId') commentId: string,
-  ): Promise<ILikes[]> {
+  ): Promise<ILikesResponse[]> {
     return await this.likesService.getLikesByCommentId(commentId);
   }
 

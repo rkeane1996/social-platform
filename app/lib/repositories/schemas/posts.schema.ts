@@ -1,5 +1,18 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument, Types } from 'mongoose';
+
+
+@Schema({_id: false})
+export class LikeSubdocument {
+  @Prop({ type: Types.ObjectId})
+  like_id: string;
+}
+
+@Schema({_id: false})
+export class CommentSubdocument {
+  @Prop({ type: Types.ObjectId})
+  comment_id: string;
+}
 
 @Schema()
 export class Posts {
@@ -15,11 +28,11 @@ export class Posts {
   @Prop({ type: Date, default: Date.now })
   created_at;
 
-  @Prop([{ like_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Likes' } }])
+  @Prop([{ type: LikeSubdocument, ref: 'Likes' }])
   likes;
 
   @Prop([
-    { comment_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Comments' } },
+    { type: CommentSubdocument, ref: 'Comments' },
   ])
   comments;
 }

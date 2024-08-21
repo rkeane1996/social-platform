@@ -19,14 +19,21 @@ export class CommentsService {
         commentAdded.id,
       );
     }
-    return commentAdded;
+    return this.formatCommentResponse(commentAdded);
   }
 
   async getPostComments(postId: string): Promise<IComment[]> {
-    const comments = await this.commentRepo.getCommentsByPostId(postId);
-    if (comments.length < 1) {
-      return [];
-    }
-    return comments;
+    const comments = (await this.commentRepo.getCommentsByPostId(postId)) || [];
+    return comments.map((comment) => this.formatCommentResponse(comment));
+  }
+
+  private formatCommentResponse(comment): IComment {
+    return {
+      id: comment._id,
+      post_id: comment.post_id,
+      user_id: comment.user_id,
+      text: comment.text,
+      likes: comment.likes,
+    };
   }
 }

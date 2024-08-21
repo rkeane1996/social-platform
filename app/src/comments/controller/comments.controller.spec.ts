@@ -11,7 +11,6 @@ const mockComment: IComment = {
   post_id: 'post1',
   user_id: 'user1',
   text: 'This is a comment',
-  created_at: new Date(),
   likes: [],
 };
 

@@ -1,7 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UpdateUserProfileDto } from '../../../src/users/dto/request/update-user-dto';
-import { GetUsersResponse } from '../../../src/users/dto/response/get-user-response.interface';
 import { Users, UsersDocument } from '../schemas/users.schema';
 
 export class UsersRepository {
@@ -10,24 +9,24 @@ export class UsersRepository {
     private readonly usersModel: Model<UsersDocument>,
   ) {}
 
-  async findUser(userId: string): Promise<GetUsersResponse> {
+  async findUser(userId: string): Promise<UsersDocument> {
     return await this.usersModel.findOne({ _id: userId }).lean();
   }
 
-  async findUsers(): Promise<GetUsersResponse[]> {
+  async findUsers(): Promise<UsersDocument[]> {
     return await this.usersModel.find().lean();
   }
 
-  async addUserPosts(userId: string, postId: string){
+  async addUserPosts(userId: string, postId: string): Promise<UsersDocument> {
     return await this.usersModel.findOneAndUpdate(
       { _id: userId },
       {
-        $push: { posts: postId },
+        $push: { posts: {post_id : postId} },
       },
     );
   }
 
-  async addFollwing(userId: string, followingId: string) {
+  async addFollwing(userId: string, followingId: string): Promise<UsersDocument> {
     return await this.usersModel.findOneAndUpdate(
       { _id: userId },
       {
@@ -36,7 +35,7 @@ export class UsersRepository {
     );
   }
 
-  async addFollower(userId: string, followerId: string) {
+  async addFollower(userId: string, followerId: string): Promise<UsersDocument> {
     return await this.usersModel.findOneAndUpdate(
       { _id: userId },
       {
@@ -46,7 +45,7 @@ export class UsersRepository {
   }
 
 
-  async updateUserProfile(updatedUserDetails: UpdateUserProfileDto) {
+  async updateUserProfile(updatedUserDetails: UpdateUserProfileDto): Promise<UsersDocument> {
     return await this.usersModel.findOneAndUpdate(
       { _id: updatedUserDetails.userId },
       {

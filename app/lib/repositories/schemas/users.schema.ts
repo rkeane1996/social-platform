@@ -1,5 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
+
+
+@Schema({_id: false})
+export class PostSubdocument {
+  @Prop({ type: Types.ObjectId})
+  post_id: string;
+}
+
+@Schema({_id: false})
+export class UserSubdocument {
+  @Prop({ type: Types.ObjectId})
+  user_id: string;
+}
+
 
 @Schema()
 export class Users {
@@ -21,13 +35,13 @@ export class Users {
   @Prop({ type: String })
   profile_picture;
 
-  @Prop([{ user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' } }])
+  @Prop([{ type: UserSubdocument, ref: 'Users' }])
   followers;
 
-  @Prop([{ user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' } }])
+  @Prop([{ type: UserSubdocument, ref: 'Users' }])
   following;
 
-  @Prop([{ post_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Posts' } }])
+  @Prop([{ type: PostSubdocument, ref: 'Posts' }])
   posts;
 
   @Prop({ type: Date, default: Date.now })

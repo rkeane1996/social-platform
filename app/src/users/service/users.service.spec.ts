@@ -3,7 +3,6 @@ import { UsersService } from './users.service';
 import { GetUserQueryDto } from '../dto/request/get-user-dto';
 import { UpdateUserProfileDto } from '../dto/request/update-user-dto';
 import { NotFoundException } from '@nestjs/common';
-import { GetUsersResponse } from '../dto/response/get-user-response.interface';
 import { UpdateUserResponse } from '../dto/response/update-user-response.interface';
 import { UsersRepository } from '../../../lib/repositories/users/user.repository';
 
@@ -39,7 +38,8 @@ describe('UsersService', () => {
   describe('getUser', () => {
     it('should return a user when found', async () => {
       const query: GetUserQueryDto = { userId: '1' };
-      const result: any = {
+      const result = {
+        _id: 'ds',
         username: 'john',
         name: 'John Doe',
         bio: '',
@@ -48,9 +48,20 @@ describe('UsersService', () => {
         following: [],
         posts: [],
       };
-      jest.spyOn(repository, 'findUser').mockResolvedValue(result);
+      jest.spyOn(repository, 'findUser').mockResolvedValue(result as any);
 
-      expect(await service.getUser(query)).toBe(result);
+      const res = await service.getUser(query);
+
+      expect(res).toEqual({
+        id: 'ds',
+        username: 'john',
+        name: 'John Doe',
+        bio: '',
+        profile_picture: '',
+        followers: [],
+        following: [],
+        posts: [],
+      });
     });
 
     it('should throw NotFoundException when user not found', async () => {
@@ -65,8 +76,9 @@ describe('UsersService', () => {
 
   describe('getUsers', () => {
     it('should return an array of users', async () => {
-      const result: GetUsersResponse[] = [
+      const result = [
         {
+          _id: 'sds',
           username: 'john',
           name: 'John Doe',
           bio: '',
@@ -76,9 +88,20 @@ describe('UsersService', () => {
           posts: [],
         },
       ];
-      jest.spyOn(repository, 'findUsers').mockResolvedValue(result);
+      jest.spyOn(repository, 'findUsers').mockResolvedValue(result as any);
 
-      expect(await service.getUsers()).toBe(result);
+      expect(await service.getUsers()).toEqual([
+        {
+          id: 'sds',
+          username: 'john',
+          name: 'John Doe',
+          bio: '',
+          profile_picture: '',
+          followers: [],
+          following: [],
+          posts: [],
+        },
+      ]);
     });
   });
 

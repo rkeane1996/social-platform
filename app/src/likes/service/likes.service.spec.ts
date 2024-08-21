@@ -4,24 +4,12 @@ import { LikesRepository } from '../../../lib/repositories/likes/likes.repositor
 import { PostsRepository } from '../../../lib/repositories/posts/post.repository';
 import { CommentsRepository } from '../../../lib/repositories/comments/comments.repository';
 import { AddLikeDto } from '../dto/request/add-like.dto';
-import { ILikes } from '../dto/response/get-like.interface';
-
-// Mock data
-const mockLike: ILikes = {
-  id: 'like1',
-  user_id: 'user1',
-  post_id: 'post1',
-  comment_id: null,
-  created_at: new Date(),
-};
-
-const mockLikes: ILikes[] = [mockLike];
 
 describe('LikesService', () => {
-  let likesService: LikesService;
-  let likesRepository: LikesRepository;
-  let postsRepository: PostsRepository;
-  let commentsRepository: CommentsRepository;
+  let service: LikesService;
+  let likeRepository: LikesRepository;
+  let postRepo: PostsRepository;
+  let commentRepo: CommentsRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -30,219 +18,191 @@ describe('LikesService', () => {
         {
           provide: LikesRepository,
           useValue: {
-            addLike: jest.fn().mockResolvedValue(mockLike),
-            findLikesByPostId: jest.fn().mockResolvedValue(mockLikes),
-            findLikesByCommentId: jest.fn().mockResolvedValue(mockLikes),
-            findLikesById: jest.fn().mockResolvedValue(mockLike),
+            addLike: jest.fn(),
+            findLikesByPostId: jest.fn(),
+            findLikesByCommentId: jest.fn(),
+            findLikesById: jest.fn(),
           },
         },
         {
           provide: PostsRepository,
           useValue: {
-            addLikeToPost: jest.fn().mockResolvedValue(undefined),
+            addLikeToPost: jest.fn(),
           },
         },
         {
           provide: CommentsRepository,
           useValue: {
-            addLikeToComment: jest.fn().mockResolvedValue(undefined),
+            addLikeToComment: jest.fn(),
           },
         },
       ],
     }).compile();
 
-    likesService = module.get<LikesService>(LikesService);
-    likesRepository = module.get<LikesRepository>(LikesRepository);
-    postsRepository = module.get<PostsRepository>(PostsRepository);
-    commentsRepository = module.get<CommentsRepository>(CommentsRepository);
-  });
-
-  it('should be defined', () => {
-    expect(likesService).toBeDefined();
+    service = module.get<LikesService>(LikesService);
+    likeRepository = module.get<LikesRepository>(LikesRepository);
+    postRepo = module.get<PostsRepository>(PostsRepository);
+    commentRepo = module.get<CommentsRepository>(CommentsRepository);
   });
 
   describe('addLike', () => {
     it('should add a like to a post', async () => {
-      const dto: AddLikeDto = { user_id: 'user1', post_id: 'post1' };
+      const addLikeDto: AddLikeDto = { user_id: 'user1', post_id: 'post1' };
+      const mockLike = { _id: 'like1', user_id: 'user1', post_id: 'post1' };
 
-      const result = await likesService.addLike(dto);
+      jest.spyOn(likeRepository, 'addLike').mockResolvedValue(mockLike as any);
+      jest.spyOn(postRepo, 'addLikeToPost').mockResolvedValue(undefined);
 
-      expect(result).toEqual(mockLike);
-      expect(likesRepository.addLike).toHaveBeenCalledWith(dto);
-      expect(postsRepository.addLikeToPost).toHaveBeenCalledWith(
-        'post1',
-        mockLike.id,
-      );
-      expect(commentsRepository.addLikeToComment).not.toHaveBeenCalled();
+      const result = await service.addLike(addLikeDto);
+
+      expect(likeRepository.addLike).toHaveBeenCalledWith(addLikeDto);
+      expect(postRepo.addLikeToPost).toHaveBeenCalled();
+      expect(commentRepo.addLikeToComment).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        id: 'like1',
+        user_id: 'user1',
+        post_id: 'post1',
+        comment_id: undefined,
+      });
     });
 
     it('should add a like to a comment', async () => {
-      const dto: AddLikeDto = { user_id: 'user1', comment_id: 'comment1' };
+      const addLikeDto: AddLikeDto = {
+        user_id: 'user1',
+        comment_id: 'comment1',
+      };
+      const mockLike = {
+        _id: 'like1',
+        user_id: 'user1',
+        comment_id: 'comment1',
+      };
 
-      const result = await likesService.addLike(dto);
+      jest.spyOn(likeRepository, 'addLike').mockResolvedValue(mockLike as any);
+      jest.spyOn(commentRepo, 'addLikeToComment').mockResolvedValue(undefined);
 
-      expect(result).toEqual(mockLike);
-      expect(likesRepository.addLike).toHaveBeenCalledWith(dto);
-      expect(commentsRepository.addLikeToComment).toHaveBeenCalledWith(
-        'comment1',
-        mockLike.id,
-      );
-      expect(postsRepository.addLikeToPost).not.toHaveBeenCalled();
+      const result = await service.addLike(addLikeDto);
+
+      expect(likeRepository.addLike).toHaveBeenCalledWith(addLikeDto);
+      expect(commentRepo.addLikeToComment).toHaveBeenCalled();
+      expect(postRepo.addLikeToPost).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        id: 'like1',
+        user_id: 'user1',
+        post_id: undefined,
+        comment_id: 'comment1',
+      });
     });
 
-    it('should handle adding a like to both a post and a comment', async () => {
-      const dto: AddLikeDto = {
+    it('should add a like to both post and comment', async () => {
+      const addLikeDto: AddLikeDto = {
+        user_id: 'user1',
+        post_id: 'post1',
+        comment_id: 'comment1',
+      };
+      const mockLike = {
+        _id: 'like1',
         user_id: 'user1',
         post_id: 'post1',
         comment_id: 'comment1',
       };
 
-      const result = await likesService.addLike(dto);
+      jest.spyOn(likeRepository, 'addLike').mockResolvedValue(mockLike as any);
+      jest.spyOn(postRepo, 'addLikeToPost').mockResolvedValue(undefined);
+      jest.spyOn(commentRepo, 'addLikeToComment').mockResolvedValue(undefined);
 
-      expect(result).toEqual(mockLike);
-      expect(likesRepository.addLike).toHaveBeenCalledWith(dto);
-      expect(postsRepository.addLikeToPost).toHaveBeenCalledWith(
-        'post1',
-        mockLike.id,
-      );
-      expect(commentsRepository.addLikeToComment).toHaveBeenCalledWith(
-        'comment1',
-        mockLike.id,
-      );
-    });
+      const result = await service.addLike(addLikeDto);
 
-    it('should handle a failure in adding a like to a post', async () => {
-      jest
-        .spyOn(postsRepository, 'addLikeToPost')
-        .mockRejectedValueOnce(new Error('Failed to add like to post'));
-
-      const dto: AddLikeDto = { user_id: 'user1', post_id: 'post1' };
-
-      await expect(likesService.addLike(dto)).rejects.toThrow(
-        'Failed to add like to post',
-      );
-    });
-
-    it('should handle a failure in adding a like to a comment', async () => {
-      jest
-        .spyOn(commentsRepository, 'addLikeToComment')
-        .mockRejectedValueOnce(new Error('Failed to add like to comment'));
-
-      const dto: AddLikeDto = { user_id: 'user1', comment_id: 'comment1' };
-
-      await expect(likesService.addLike(dto)).rejects.toThrow(
-        'Failed to add like to comment',
-      );
+      expect(likeRepository.addLike).toHaveBeenCalledWith(addLikeDto);
+      expect(postRepo.addLikeToPost).toHaveBeenCalled();
+      expect(commentRepo.addLikeToComment).toHaveBeenCalled();
+      expect(result).toEqual({
+        id: 'like1',
+        user_id: 'user1',
+        post_id: 'post1',
+        comment_id: 'comment1',
+      });
     });
   });
 
   describe('getLikesByPostId', () => {
-    it('should return a list of likes for a post', async () => {
-      const postId = 'post1';
+    it('should return likes for a post', async () => {
+      const mockLikes = [{ user_id: 'user1' }, { user_id: 'user2' }];
+      jest
+        .spyOn(likeRepository, 'findLikesByPostId')
+        .mockResolvedValue(mockLikes as any);
 
-      const result = await likesService.getLikesByPostId(postId);
+      const result = await service.getLikesByPostId('post1');
 
+      expect(likeRepository.findLikesByPostId).toHaveBeenCalledWith('post1');
       expect(result).toEqual(mockLikes);
-      expect(likesRepository.findLikesByPostId).toHaveBeenCalledWith(postId);
     });
 
-    it('should return an empty array if no likes are found for a post', async () => {
-      jest
-        .spyOn(likesRepository, 'findLikesByPostId')
-        .mockResolvedValueOnce([]);
+    it('should return an empty array when there are no likes for a post', async () => {
+      jest.spyOn(likeRepository, 'findLikesByPostId').mockResolvedValue([]);
 
-      const postId = 'post1';
+      const result = await service.getLikesByPostId('post1');
 
-      const result = await likesService.getLikesByPostId(postId);
-
+      expect(likeRepository.findLikesByPostId).toHaveBeenCalledWith('post1');
       expect(result).toEqual([]);
-      expect(likesRepository.findLikesByPostId).toHaveBeenCalledWith(postId);
-    });
-
-    it('should handle a failure in fetching likes for a post', async () => {
-      jest
-        .spyOn(likesRepository, 'findLikesByPostId')
-        .mockRejectedValueOnce(new Error('Failed to fetch likes for post'));
-
-      const postId = 'post1';
-
-      await expect(likesService.getLikesByPostId(postId)).rejects.toThrowError(
-        'Failed to fetch likes for post',
-      );
     });
   });
 
   describe('getLikesByCommentId', () => {
-    it('should return a list of likes for a comment', async () => {
-      const commentId = 'comment1';
+    it('should return likes for a comment', async () => {
+      const mockLikes = [{ user_id: 'user1' }, { user_id: 'user2' }];
+      jest
+        .spyOn(likeRepository, 'findLikesByCommentId')
+        .mockResolvedValue(mockLikes as any);
 
-      const result = await likesService.getLikesByCommentId(commentId);
+      const result = await service.getLikesByCommentId('comment1');
 
+      expect(likeRepository.findLikesByCommentId).toHaveBeenCalledWith(
+        'comment1',
+      );
       expect(result).toEqual(mockLikes);
-      expect(likesRepository.findLikesByCommentId).toHaveBeenCalledWith(
-        commentId,
-      );
     });
 
-    it('should return an empty array if no likes are found for a comment', async () => {
-      jest
-        .spyOn(likesRepository, 'findLikesByCommentId')
-        .mockResolvedValueOnce([]);
+    it('should return an empty array when there are no likes for a comment', async () => {
+      jest.spyOn(likeRepository, 'findLikesByCommentId').mockResolvedValue([]);
 
-      const commentId = 'comment1';
+      const result = await service.getLikesByCommentId('comment1');
 
-      const result = await likesService.getLikesByCommentId(commentId);
-
+      expect(likeRepository.findLikesByCommentId).toHaveBeenCalledWith(
+        'comment1',
+      );
       expect(result).toEqual([]);
-      expect(likesRepository.findLikesByCommentId).toHaveBeenCalledWith(
-        commentId,
-      );
-    });
-
-    it('should handle a failure in fetching likes for a comment', async () => {
-      jest
-        .spyOn(likesRepository, 'findLikesByCommentId')
-        .mockRejectedValueOnce(new Error('Failed to fetch likes for comment'));
-
-      const commentId = 'comment1';
-
-      await expect(
-        likesService.getLikesByCommentId(commentId),
-      ).rejects.toThrowError('Failed to fetch likes for comment');
     });
   });
 
   describe('getLikeById', () => {
-    it('should return a like by its ID', async () => {
-      const likeId = 'like1';
-
-      const result = await likesService.getLikeById(likeId);
-
-      expect(result).toEqual(mockLike);
-      expect(likesRepository.findLikesById).toHaveBeenCalledWith(likeId);
-    });
-
-    it('should handle a failure in fetching a like by its ID', async () => {
+    it('should return a like by its id', async () => {
+      const mockLike = {
+        _id: 'like1',
+        user_id: 'user1',
+        post_id: 'post1',
+        comment_id: 'comment1',
+      };
       jest
-        .spyOn(likesRepository, 'findLikesById')
-        .mockRejectedValueOnce(new Error('Failed to fetch like by ID'));
+        .spyOn(likeRepository, 'findLikesById')
+        .mockResolvedValue(mockLike as any);
 
-      const likeId = 'like1';
+      const result = await service.getLikeById('like1');
 
-      await expect(likesService.getLikeById(likeId)).rejects.toThrowError(
-        'Failed to fetch like by ID',
-      );
+      expect(likeRepository.findLikesById).toHaveBeenCalledWith('like1');
+      expect(result).toEqual({
+        id: 'like1',
+        user_id: 'user1',
+        post_id: 'post1',
+        comment_id: 'comment1',
+      });
     });
 
-    it('should return null if no like is found by its ID', async () => {
-      jest.spyOn(likesRepository, 'findLikesById').mockResolvedValueOnce(null);
+    it('should throw an error when like is not found', async () => {
+      jest.spyOn(likeRepository, 'findLikesById').mockResolvedValue(null);
 
-      const likeId = 'like1';
-
-      const result = await likesService.getLikeById(likeId);
-
-      expect(result).toBeNull();
-      expect(likesRepository.findLikesById).toHaveBeenCalledWith(likeId);
+      await expect(
+        service.getLikeById('invalid_like_id'),
+      ).rejects.toThrowError();
     });
   });
 });

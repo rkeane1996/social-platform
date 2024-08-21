@@ -18,11 +18,12 @@ export class UsersService {
       throw new NotFoundException('User was not found');
     }
 
-    return userFound;
+    return this.formatUserResponse(userFound);
   }
 
   async getUsers(): Promise<GetUsersResponse[]> {
-    return await this.userRepo.findUsers();
+    const users = (await this.userRepo.findUsers()) || [];
+    return users.map((posts) => this.formatUserResponse(posts));
   }
 
   async updateUserProfile(
@@ -38,5 +39,18 @@ export class UsersService {
       response.informationUpdated = false;
     }
     return response;
+  }
+
+  private formatUserResponse(user): GetUsersResponse {
+    return {
+      id: user._id,
+      username: user.username,
+      name: user.name,
+      bio: user.bio,
+      profile_picture: user.profile_picture,
+      followers: user.followers,
+      following: user.following,
+      posts: user.posts,
+    };
   }
 }

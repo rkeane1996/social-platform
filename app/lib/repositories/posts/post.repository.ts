@@ -1,7 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Posts, PostsDocument } from '../schemas/posts.schema';
-import { IPosts } from '../../../src/posts/dto/response/get-posts-response.interface';
 import { CreatePostsDto } from '../../../src/posts/dto/request/create-posts-response.dto';
 
 export class PostsRepository {
@@ -10,7 +9,7 @@ export class PostsRepository {
     private readonly postsModel: Model<PostsDocument>,
   ) {}
 
-  async findUsersPosts(userId: string): Promise<IPosts[]> {
+  async findUsersPosts(userId: string) {
     return await this.postsModel.find({ user_id: userId }).lean();
   }
 
@@ -22,7 +21,7 @@ export class PostsRepository {
     return await this.postsModel.findOneAndUpdate(
       { _id: postid },
       {
-        $push: { likes: likeId },
+        $push: { likes: {like_id: likeId} },
       },
     );
   }
@@ -31,7 +30,7 @@ export class PostsRepository {
     return await this.postsModel.findOneAndUpdate(
       { _id: postid },
       {
-        $push: { comments: commentId },
+        $push: { comments: {comment_id :commentId} },
       },
     );
   }

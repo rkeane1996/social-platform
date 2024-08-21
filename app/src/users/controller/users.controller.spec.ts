@@ -38,6 +38,7 @@ describe('UsersController', () => {
     it('should return a user when found', async () => {
       const query: GetUserQueryDto = { userId: '1' };
       const result = {
+        id: 'ds',
         username: 'john',
         name: 'John Doe',
         bio: '',
@@ -67,6 +68,7 @@ describe('UsersController', () => {
     it('should return an array of users', async () => {
       const result = [
         {
+          id: 'ds',
           username: 'john',
           name: 'John Doe',
           bio: '',
